@@ -1,0 +1,41 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+*.ap_
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+.gradle/
+.idea/
+*.iml
+local.properties
+
+# Environment Variables (Security)
+.env
+service-account.json
+google-services.json
+key.jks
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.ds_store
+
+# Logs
+logs/
+*.log

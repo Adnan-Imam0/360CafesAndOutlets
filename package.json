@@ -1,0 +1,25 @@
+{
+  "name": "cafe-360-root",
+  "version": "1.0.0",
+  "scripts": {
+    "start:all": "concurrently \"npm run start:gateway\" \"npm run start:auth\" \"npm run start:user\" \"npm run start:shop\" \"npm run start:order\"",
+    "start:gateway": "cd backend/api-gateway && npm run dev",
+    "start:auth": "cd backend/auth-service && npm run dev",
+    "start:user": "cd backend/user-service && npm run dev",
+    "start:shop": "cd backend/shop-service && npm run dev",
+    "start:order": "cd backend/order-service && npm run dev"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.0",
+    "http-proxy-middleware": "^3.0.5",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.11"
+  }
+}

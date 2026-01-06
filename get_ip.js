@@ -1,0 +1,16 @@
+const os = require('os');
+const interfaces = os.networkInterfaces();
+const results = Object.create(null);
+
+for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+        // Skip over internal (i.e. 127.0.0.1) and non-IPv4 addresses
+        if ('IPv4' !== iface.family || iface.internal) {
+            continue;
+        }
+        results[name] = results[name] || [];
+        results[name].push(iface.address);
+    }
+}
+
+console.log(JSON.stringify(results, null, 2));

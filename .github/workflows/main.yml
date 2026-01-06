@@ -1,0 +1,58 @@
+name: Cafe 360 CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  # 1. Backend Build & Test
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Dependencies
+        run: |
+          cd backend
+          npm install
+      # - name: Run Tests
+      #   run: cd backend && npm test
+
+  # 2. Deploy Backend to Render (Trigger via Hook)
+  deploy-render:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deploy
+        # You need to add RENDER_DEPLOY_HOOK_URL to GitHub Secrets
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+  # 3. Build & Deploy Shop Owner Web App
+  deploy-web:
+    runs-on: ubuntu-latest
+    needs: build-backend
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Install Dependencies
+        run: |
+          cd frontend/shop_owner_app
+          flutter pub get
+      - name: Build Web
+        run: |
+          cd frontend/shop_owner_app
+          flutter build web --release
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAFE_360 }}'
+          projectId: cafe-360
+          channelId: live

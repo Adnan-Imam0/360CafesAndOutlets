@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cafe_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: cafe_360
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cafe_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: cafe_gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - USER_SERVICE_URL=http://user-service:3002
+      - SHOP_SERVICE_URL=http://shop-service:3003
+      - ORDER_SERVICE_URL=http://order-service:3004
+    depends_on:
+      - auth-service
+      - user-service
+      - shop-service
+      - order-service
+
+  auth-service:
+    build: ./backend/auth-service
+    container_name: cafe_auth
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_USER=admin
+      - DB_PASSWORD=password123
+      - DB_NAME=cafe_360
+    depends_on:
+      - postgres
+
+  user-service:
+    build: ./backend/user-service
+    container_name: cafe_user
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DB_HOST=postgres
+      - DB_USER=admin
+      - DB_PASSWORD=password123
+      - DB_NAME=cafe_360
+    depends_on:
+      - postgres
+
+  shop-service:
+    build: ./backend/shop-service
+    container_name: cafe_shop
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - DB_HOST=postgres
+      - DB_USER=admin
+      - DB_PASSWORD=password123
+      - DB_NAME=cafe_360
+    depends_on:
+      - postgres
+
+  order-service:
+    build: ./backend/order-service
+    container_name: cafe_order
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - DB_HOST=postgres
+      - DB_USER=admin
+      - DB_PASSWORD=password123
+      - DB_NAME=cafe_360
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

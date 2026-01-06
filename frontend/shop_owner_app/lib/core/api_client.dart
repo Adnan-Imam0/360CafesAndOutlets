@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   final String baseUrl;
 
-  ApiClient({this.baseUrl = 'http://127.0.0.1:3000'}); // Gateway URL (IPv4)
+  ApiClient({
+    this.baseUrl = 'https://cafe360-gateway.onrender.com',
+  }); // Production Live URL
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

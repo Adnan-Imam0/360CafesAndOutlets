@@ -1,4 +1,4 @@
-name: Cafe 360 CI/CD
+name: 360CafesAndOutlets
 
 on:
   push:

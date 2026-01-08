@@ -70,7 +70,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Join Cafe 360',
+                            'Join 360 Cafe&Outlets',
                             style: Theme.of(context).textTheme.headlineMedium,
                             textAlign: TextAlign.center,
                           ),

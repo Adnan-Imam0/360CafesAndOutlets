@@ -114,7 +114,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> registerCustomer(String name) async {
+  Future<void> registerCustomer(String name, {String? phoneNumber}) async {
     if (_user == null) {
       throw Exception('No user signed in');
     }
@@ -124,14 +124,20 @@ class AuthProvider with ChangeNotifier {
       // Customer not found, auto-register them using Google data
       final newCustomer = {
         'firebase_uid': _user!.uid,
-        'phone_number': _user!.phoneNumber ?? '0${_user!.uid.substring(0, 10)}',
+        'phone_number':
+            phoneNumber ??
+            _user!.phoneNumber ??
+            '0${_user!.uid.substring(0, 10)}',
         'display_name': name.isNotEmpty
             ? name
             : (_user!.displayName ?? 'Google User'),
+        'email': _user!.email,
       };
       final profile = await _apiClient.post('/users/customer', newCustomer);
       _customerProfile = profile;
       _initSocket();
+      // Retry FCM Token save
+      NotificationService().initialize(_user!.uid);
     } catch (e) {
       rethrow;
     } finally {
@@ -150,30 +156,9 @@ class AuthProvider with ChangeNotifier {
   bool get isProfileComplete {
     if (_customerProfile == null) return false;
     final phone = _customerProfile!['phone_number'] as String?;
-    // Check if phone is null, empty, or starts with '0' (dummy) AND length is roughly 28 (failed UUID) or simple dummy
-    // Actually our dummy logic was '0' + uid substring.
-    // Real Pakistani numbers differ.
-    // Simplest: If we used '0' + uid prefix, we can check if it looks like a real phone.
-    // Or just check if user has explicitly updated it (maybe add a flag in DB? No, too complex).
-    // Let's assume real numbers don't start with '0' + 'uid_substring'.
-    // Actually, simpler: If it matches the pattern we generated.
-    // Generated: '0${user.uid.substring(0, 10)}'
-    // Let's just rely on the UI flow. If we force update, we save it.
-    // Better: Check if it's the exact same as what we generated? No, we don't have user.uid easily here.
-    // Let's just say if it's NOT NULL and valid.
-    // To strictly enforce, we probably need a flag.
-    // For now, let's treat any phone number starting with '0' followed by alphanumeric/long string as suspicious?
-    // No, standard Pakistani mobile is 03...
-    // Let's rely on the fact that Google Auth likely didn't provide one, so we put a dummy.
-    // If the user hasn't touched it, it's a dummy.
-    // Currently, we don't have a specific field.
-    // Let's blindly trust the user update for now.
-    // If we want to force it, we can check if the phone number equals the dummy format.
     if (phone == null) return false;
 
     // Heuristic: If it contains letters (from UID substring?) -> UID is usually alphanumeric.
-    // Phone numbers should only be digits.
-    // Our dummy was: '0' + user.uid.substring(0, 10). UID might have chars.
     final hasLetters = phone.contains(RegExp(r'[a-zA-Z]'));
     if (hasLetters) return false;
 
@@ -181,7 +166,18 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> updatePhoneNumber(String phone) async {
-    if (_customerProfile == null) throw Exception('No profile loaded');
+    // If profile is null (backend sync failed), try to REGISTER (Create) instead of Update
+    if (_customerProfile == null) {
+      if (_user != null) {
+        await registerCustomer(
+          _user!.displayName ?? 'Customer',
+          phoneNumber: phone,
+        );
+        return;
+      }
+      throw Exception('No profile loaded and no user signed in');
+    }
+
     _isLoading = true;
     notifyListeners();
 
@@ -191,6 +187,8 @@ class AuthProvider with ChangeNotifier {
         'phone_number': phone,
       });
       _customerProfile = response;
+      // Retry FCM Token save
+      NotificationService().initialize(_user!.uid);
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -229,6 +227,8 @@ class AuthProvider with ChangeNotifier {
 
       if (response != null) {
         _customerProfile = response;
+        // Retry FCM Token save in case it failed initially
+        NotificationService().initialize(_user!.uid);
         notifyListeners();
       }
     } catch (e) {

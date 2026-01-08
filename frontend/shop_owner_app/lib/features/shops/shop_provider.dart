@@ -21,6 +21,7 @@ class ShopProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> fetchMyShop(dynamic firebaseUid) async {
+    if (_isLoading) return; // Prevent concurrent fetches
     _isLoading = true;
     notifyListeners();
 
@@ -44,7 +45,7 @@ class ShopProvider with ChangeNotifier {
         _shop = null;
       }
     } catch (e) {
-      print('Error fetching shop: $e');
+      debugPrint('Error fetching shop: $e');
       _shop = null;
     } finally {
       _isLoading = false;
@@ -104,6 +105,23 @@ class ShopProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> toggleShopStatus(bool isOpen) async {
+    try {
+      final shopId = _shop!['shop_id'];
+      final response = await _apiClient.patch('/shops/$shopId/status', {
+        'is_open': isOpen,
+      });
+
+      if (response != null && _shop != null) {
+        _shop!['is_open'] = response['is_open'];
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Toggle shop status failed: $e');
+      rethrow;
     }
   }
 

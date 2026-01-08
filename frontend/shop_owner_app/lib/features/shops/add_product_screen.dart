@@ -303,7 +303,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 controller: _priceController,
                 decoration: const InputDecoration(
                   labelText: 'Price',
-                  prefixText: '\$ ',
+                  prefixText: 'Rs. ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,

@@ -31,11 +31,38 @@ const createShop = async (req, res) => {
 };
 
 const getAllShops = async (req, res) => {
+    const { search, type } = req.query;
     try {
-        const result = await pool.query('SELECT * FROM shops WHERE status = $1', ['active']); // Assuming we only show active shops? Or all for now.
-        // Actually schema default is 'pending'. Let's just return all for checking.
-        const allShops = await pool.query('SELECT * FROM shops');
-        res.json(allShops.rows);
+        let query = `
+            SELECT s.*, 
+                   COALESCE(AVG(r.rating), 0) as average_rating, 
+                   COUNT(r.review_id) as review_count
+            FROM shops s
+            LEFT JOIN reviews r ON s.shop_id = r.shop_id
+            WHERE 1=1
+        `;
+        const values = [];
+        let valueIndex = 1;
+
+        if (search) {
+            query += ` AND s.shop_name ILIKE $${valueIndex}`;
+            values.push(`%${search}%`);
+            valueIndex++;
+        }
+
+        if (type && type !== 'All') {
+            query += ` AND s.shop_type ILIKE $${valueIndex}`;
+            values.push(type);
+            valueIndex++;
+        }
+
+        query += `
+            GROUP BY s.shop_id
+            ORDER BY s.shop_id ASC;
+        `;
+
+        const result = await pool.query(query, values);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch shops' });
@@ -96,10 +123,41 @@ const updateShop = async (req, res) => {
     }
 };
 
+const toggleShopStatus = async (req, res) => {
+    console.error(`[ShopController] toggleShopStatus hit. Params: ${JSON.stringify(req.params)} Body: ${JSON.stringify(req.body)}`);
+    const { id } = req.params;
+    const { is_open } = req.body;
+
+    try {
+        const query = `
+            UPDATE shops 
+            SET is_open = $1
+            WHERE shop_id = $2
+            RETURNING *;
+        `;
+        const values = [is_open, id];
+        const result = await pool.query(query, values);
+
+        console.error(`[ShopController] DB Result: ${JSON.stringify(result.rows)}`);
+
+        if (result.rows.length === 0) {
+            console.error('[ShopController] Shop not found in DB');
+            return res.status(404).json({ error: 'Shop not found' });
+        }
+
+        console.error('[ShopController] Sending success response...');
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update shop status' });
+    }
+};
+
 module.exports = {
     createShop,
     getAllShops,
     getShopById,
     getShopByOwnerId,
-    updateShop
+    updateShop,
+    toggleShopStatus
 };

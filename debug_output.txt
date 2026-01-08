@@ -1,0 +1,20 @@
+[dotenv@17.2.3] injecting env (8) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[DEBUG] reviewRoutes loaded
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Shop Service running on port 3003
+D:\final project\backend\shop-service\index.js:60
+    app._router.stack.forEach(middleware => {
+                ^
+
+TypeError: Cannot read properties of undefined (reading 'stack')
+    at Server.<anonymous> (D:\final project\backend\shop-service\index.js:60:17)
+    at Server.f (D:\final project\backend\shop-service\node_modules\once\once.js:25:25)
+    at Object.onceWrapper (node:events:639:26)
+    at Server.emit (node:events:524:28)
+    at emitErrorNT (node:net:1944:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+Node.js v20.19.5

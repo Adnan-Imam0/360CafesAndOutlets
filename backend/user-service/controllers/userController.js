@@ -183,6 +183,9 @@ const updateCustomerProfile = async (req, res) => {
         res.json(result.rows[0]);
     } catch (err) {
         console.error('Update Customer Error:', err);
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Phone number already in use' });
+        }
         res.status(500).json({ error: 'Failed to update customer' });
     }
 };

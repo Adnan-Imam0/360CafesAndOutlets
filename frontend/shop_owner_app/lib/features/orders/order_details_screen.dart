@@ -194,7 +194,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       ),
                     ),
                     trailing: Text(
-                      '\$${item['price']}',
+                      'Rs. ${item['price']}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -228,7 +228,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       ),
                     ),
                     Text(
-                      '\$${totalAmount.toStringAsFixed(2)}',
+                      'Rs. ${totalAmount.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -519,7 +519,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     pw.Expanded(
                       child: pw.Text('${item["quantity"]}x ${item["name"]}'),
                     ),
-                    pw.Text('\$${item["price"]}'),
+                    pw.Text('Rs. ${item["price"]}'),
                   ],
                 ),
               ),
@@ -532,7 +532,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                   ),
                   pw.Text(
-                    '\$${totalAmount.toStringAsFixed(2)}',
+                    'Rs. ${totalAmount.toStringAsFixed(2)}',
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                   ),
                 ],

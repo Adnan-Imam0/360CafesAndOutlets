@@ -13,6 +13,11 @@ app.get('/health', (req, res) => {
     res.json({ status: 'API Gateway Running' });
 });
 
+app.use((req, res, next) => {
+    console.log(`[Gateway] Incoming: ${req.method} ${req.url} (original: ${req.originalUrl})`);
+    next();
+});
+
 // Proxy Routes
 // Auth Service
 app.use('/auth', createProxyMiddleware({
@@ -23,23 +28,54 @@ app.use('/auth', createProxyMiddleware({
 // User Service
 app.use('/users', createProxyMiddleware({
     target: process.env.USER_SERVICE_URL || 'http://127.0.0.1:3002',
-    changeOrigin: true
+    changeOrigin: true,
+    pathRewrite: {
+        '^/users': '', // Strip /users prefix
+    }
 }));
 
 // Shop Service (Shops & Products)
 // Shop Service (Shops & Products)
 app.use('/shops', createProxyMiddleware({
-    // Shop Service expects /shops because it mounts app.use('/shops', ...)
-    target: (process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003') + '/shops',
-    changeOrigin: true
+    target: process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/': '/shops/', // Re-add /shops/ prefix that express strips
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log(`[Gateway] Proxied ${req.method} /shops${req.url} -> ${proxyReq.path}`);
+    },
+    onError: (err, req, res) => {
+        console.error('[Gateway] Proxy Error:', err);
+        res.status(500).send('Proxy Error');
+    }
 }));
+
 app.use('/products', createProxyMiddleware({
-    target: (process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003') + '/products',
-    changeOrigin: true
+    target: process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/': '/api/products/',
+    }
 }));
+
 app.use('/categories', createProxyMiddleware({
-    target: (process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003') + '/categories',
-    changeOrigin: true
+    target: process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/': '/api/categories/',
+    }
+}));
+
+app.use('/reviews', createProxyMiddleware({
+    target: process.env.SHOP_SERVICE_URL || 'http://127.0.0.1:3003',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/': '/reviews/', // Re-add /reviews/ prefix
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log(`[Gateway] Proxied ${req.method} /reviews${req.url} -> ${proxyReq.path}`);
+    }
 }));
 
 // Order Service

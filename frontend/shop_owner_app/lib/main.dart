@@ -16,7 +16,10 @@ import 'features/shops/add_product_screen.dart';
 import 'features/shops/edit_shop_screen.dart';
 import 'features/auth/registration_screen.dart';
 import 'features/shops/category_provider.dart';
+import 'features/reviews/review_provider.dart';
+import 'features/reviews/reviews_screen.dart';
 import 'core/widgets/order_notification_wrapper.dart';
+import 'features/dashboard/overview_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -40,6 +43,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
       ],
       child: const AppRouter(),
     );
@@ -87,7 +91,7 @@ class AppRouter extends StatelessWidget {
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) => const OverviewView(),
+              builder: (context, state) => const OverviewScreen(),
             ),
             GoRoute(
               path: '/my-shop',
@@ -104,6 +108,10 @@ class AppRouter extends StatelessWidget {
             GoRoute(
               path: '/menu',
               builder: (context, state) => const MenuScreen(),
+            ),
+            GoRoute(
+              path: '/reviews',
+              builder: (context, state) => const ReviewsScreen(),
             ),
             GoRoute(
               path: '/add-product',
@@ -130,7 +138,8 @@ class AppRouter extends StatelessWidget {
     );
 
     return MaterialApp.router(
-      title: 'Cafe 360 Shop Owner',
+      debugShowCheckedModeBanner: false,
+      title: 'Shop Owner',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

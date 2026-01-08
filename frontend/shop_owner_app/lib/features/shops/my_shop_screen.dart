@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'shop_provider.dart';
-import '../auth/auth_provider.dart';
 
 class MyShopScreen extends StatefulWidget {
   const MyShopScreen({super.key});
@@ -15,16 +14,13 @@ class _MyShopScreenState extends State<MyShopScreen> {
   @override
   void initState() {
     super.initState();
+    // Shop data is managed by DashboardScreen (ShellRoute)
+    // We only need to fetch stats if shop exists and stats are empty
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = context.read<AuthProvider>();
-      final ownerId = auth.user?.uid ?? '';
-      context.read<ShopProvider>().fetchMyShop(ownerId).then((_) {
-        // After fetching shop, fetch stats if shop exists
-        final shop = context.read<ShopProvider>().shop;
-        if (shop != null) {
-          context.read<ShopProvider>().fetchShopStats(shop['shop_id']);
-        }
-      });
+      final shopProvider = context.read<ShopProvider>();
+      if (shopProvider.shop != null) {
+        shopProvider.fetchShopStats(shopProvider.shop!['shop_id']);
+      }
     });
   }
 
@@ -224,7 +220,7 @@ class _MyShopScreenState extends State<MyShopScreen> {
                   _buildStatCard(
                     context,
                     'Revenue',
-                    '\$${stats['revenue']}',
+                    'Rs. ${stats['revenue']}',
                     Icons.attach_money,
                     Colors.green,
                   ),

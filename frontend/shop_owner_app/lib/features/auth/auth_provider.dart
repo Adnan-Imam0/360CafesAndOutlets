@@ -39,6 +39,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      debugPrint('Password reset failed: $e');
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     await _auth.signOut();
   }

@@ -102,7 +102,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        actions: [
+          Consumer<CartProvider>(
+            builder: (context, cart, child) {
+              if (cart.itemCount == 0) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Clear Cart',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Clear Cart?'),
+                      content: const Text(
+                        'Are you sure you want to remove all items from your cart?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            cart.clear();
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Cart cleared')),
+                            );
+                          },
+                          child: const Text(
+                            'Clear',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.itemCount == 0) {
@@ -129,8 +172,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ...cart.items.values.map(
                   (item) => ListTile(
                     title: Text(item.name),
-                    subtitle: Text('${item.quantity} x \$${item.price}'),
-                    trailing: Text('\$${item.total.toStringAsFixed(2)}'),
+                    subtitle: Text('${item.quantity} x Rs. ${item.price}'),
+                    trailing: Text('Rs. ${item.total.toStringAsFixed(2)}'),
                   ),
                 ),
                 const Divider(),
@@ -147,7 +190,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ),
                       Text(
-                        '\$${cart.totalAmount.toStringAsFixed(2)}',
+                        'Rs. ${cart.totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,

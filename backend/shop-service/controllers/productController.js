@@ -32,8 +32,33 @@ const createProduct = async (req, res) => {
 
 const getProductsByShop = async (req, res) => {
     const { shopId } = req.params;
+    const { search, category } = req.query;
+
     try {
-        const result = await pool.query('SELECT * FROM products WHERE shop_id = $1', [shopId]);
+        let query = `
+            SELECT p.*, c.name as category 
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.shop_id = $1
+        `;
+        const values = [shopId];
+        let valueIndex = 2;
+
+        if (search) {
+            query += ` AND (p.name ILIKE $${valueIndex} OR c.name ILIKE $${valueIndex})`;
+            values.push(`%${search}%`);
+            valueIndex++;
+        }
+
+        if (category && category !== 'All') {
+            query += ` AND c.name ILIKE $${valueIndex}`;
+            values.push(category);
+            valueIndex++;
+        }
+
+        query += ` ORDER BY p.name ASC`;
+
+        const result = await pool.query(query, values);
         res.json(result.rows);
     } catch (err) {
         console.error(err);

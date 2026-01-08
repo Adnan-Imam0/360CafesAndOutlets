@@ -124,6 +124,8 @@ class _OrdersScreenState extends State<OrdersScreen>
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final order = orders[index];
+          final isDelivered = order['status'] == 'delivered';
+
           return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -136,15 +138,19 @@ class _OrdersScreenState extends State<OrdersScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Order #${order['order_id']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          'Order #${order['order_id']}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       _buildStatusChip(order['status']),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Total: \$${order['total_amount']}'),
+                  Text('Total: Rs. ${order['total_amount']}'),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat(
@@ -152,6 +158,17 @@ class _OrdersScreenState extends State<OrdersScreen>
                     ).format(DateTime.parse(order['created_at'])),
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
+                  if (isDelivered) ...[
+                    const Divider(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showReviewDialog(order),
+                        icon: const Icon(Icons.star_outline),
+                        label: const Text('Rate Order'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -159,6 +176,51 @@ class _OrdersScreenState extends State<OrdersScreen>
         },
       ),
     );
+  }
+
+  void _showReviewDialog(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (context) => _ReviewDialog(
+        orderId: order['order_id'],
+        shopId: order['shop_id'],
+        onSubmit: (rating, comment) =>
+            _submitReview(order['shop_id'], rating, comment),
+      ),
+    );
+  }
+
+  Future<void> _submitReview(int shopId, int rating, String comment) async {
+    try {
+      final auth = context.read<AuthProvider>();
+      final customer = auth.customerProfile;
+
+      if (customer == null) return;
+
+      final reviewData = {
+        'shop_id': shopId,
+        'product_id': null, // General shop review
+        'customer_id': customer['customer_id'],
+        'customer_name': customer['display_name'] ?? 'Customer',
+        'rating': rating,
+        'comment': comment,
+      };
+
+      await _apiClient.post('/reviews', reviewData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Review submitted successfully!')),
+        );
+      }
+    } catch (e) {
+      print('Submit review failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to submit review: $e')));
+      }
+    }
   }
 
   Widget _buildStatusChip(String status) {
@@ -202,6 +264,78 @@ class _OrdersScreenState extends State<OrdersScreen>
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+}
+
+class _ReviewDialog extends StatefulWidget {
+  final int orderId;
+  final int shopId;
+  final Function(int, String) onSubmit;
+
+  const _ReviewDialog({
+    required this.orderId,
+    required this.shopId,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  int _rating = 5;
+  final _commentController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Rate Order #${widget.orderId}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('How was your experience?'),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              return IconButton(
+                onPressed: () => setState(() => _rating = index + 1),
+                icon: Icon(
+                  index < _rating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 32,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            decoration: const InputDecoration(
+              labelText: 'Write a comment (optional)',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onSubmit(_rating, _commentController.text);
+            Navigator.pop(context);
+          },
+          child: const Text('Submit'),
+        ),
+      ],
     );
   }
 }

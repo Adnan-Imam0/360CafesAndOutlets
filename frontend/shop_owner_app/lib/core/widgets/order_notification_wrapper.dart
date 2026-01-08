@@ -37,7 +37,7 @@ class _OrderNotificationWrapperState extends State<OrderNotificationWrapper> {
             children: [
               Text('Order #${order['order_id']}'),
               const SizedBox(height: 8),
-              Text('Total: \$${order['total_amount']}'),
+              Text('Total: Rs. ${order['total_amount']}'),
               Text('Customer: ${order['customer_name']}'),
             ],
           ),
@@ -89,7 +89,7 @@ class _OrderNotificationWrapperState extends State<OrderNotificationWrapper> {
       final notification = html.Notification(
         'New Order #${order['order_id']}',
         body:
-            'Customer: ${order['customer_name']} - \$${order['total_amount']}',
+            'Customer: ${order['customer_name']} - Rs. ${order['total_amount']}',
         icon: '/icons/Icon-192.png',
       );
 

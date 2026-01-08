@@ -33,12 +33,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final shop = context.watch<ShopProvider>().shop;
+    final shopName = shop?['shop_name'] ?? 'My Shop';
+
+    final sidebarColor = Colors.teal.shade900;
+    final textStyle = const TextStyle(color: Colors.white);
+    final iconColor = Colors.white70;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cafe 360 Owner Dashboard'),
+        title: Text(
+          shopName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: sidebarColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const HelperIcon(Icons.logout, color: Colors.white),
             onPressed: () {
               context.read<AuthProvider>().logout();
               context.go('/login');
@@ -46,79 +64,199 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(child: Center(child: Text('Cafe 360'))),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Overview'),
-              onTap: () => context.go('/'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.store),
-              title: const Text('My Shop'),
-              onTap: () => context.go('/my-shop'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.list_alt),
-              title: const Text('Orders'),
-              onTap: () => context.go('/orders'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.restaurant_menu),
-              title: const Text('Menu'),
-              onTap: () => context.go('/menu'),
-            ),
-          ],
-        ),
-      ),
-      body: Row(
-        children: [
-          // Sidebar for desktop
-          if (MediaQuery.of(context).size.width > 800)
-            SizedBox(
-              width: 250,
+      drawer: MediaQuery.of(context).size.width > 800
+          ? null // No drawer (hamburger) on desktop as we have sidebar
+          : Drawer(
+              backgroundColor: sidebarColor,
               child: ListView(
+                padding: EdgeInsets.zero,
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.dashboard),
-                    title: const Text('Overview'),
-                    onTap: () => context.go('/'),
+                  DrawerHeader(
+                    decoration: BoxDecoration(color: Colors.teal.shade800),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.storefront,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            shopName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.store),
-                    title: const Text('My Shop'),
-                    onTap: () => context.go('/my-shop'),
+                  _buildNavItem(
+                    context,
+                    Icons.dashboard,
+                    'Overview',
+                    '/',
+                    textStyle,
+                    iconColor,
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.list_alt),
-                    title: const Text('Orders'),
-                    onTap: () => context.go('/orders'),
+                  _buildNavItem(
+                    context,
+                    Icons.list_alt,
+                    'Orders',
+                    '/orders',
+                    textStyle,
+                    iconColor,
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Menu'),
-                    onTap: () => context.go('/menu'),
+                  _buildNavItem(
+                    context,
+                    Icons.store,
+                    'My Shop',
+                    '/my-shop',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.restaurant_menu,
+                    'Menu',
+                    '/menu',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.rate_review,
+                    'Reviews',
+                    '/reviews',
+                    textStyle,
+                    iconColor,
                   ),
                 ],
               ),
             ),
+      body: Row(
+        children: [
+          // Sidebar for desktop
           if (MediaQuery.of(context).size.width > 800)
-            const VerticalDivider(width: 1),
+            Container(
+              width: 250,
+              color: sidebarColor,
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  // Logo/Title Area for Sidebar
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.storefront,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Owner Panel',
+                          style: textStyle.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(color: Colors.white24),
+                  _buildNavItem(
+                    context,
+                    Icons.dashboard,
+                    'Overview',
+                    '/',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.list_alt,
+                    'Orders',
+                    '/orders',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.store,
+                    'My Shop',
+                    '/my-shop',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.restaurant_menu,
+                    'Menu',
+                    '/menu',
+                    textStyle,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    context,
+                    Icons.rate_review,
+                    'Reviews',
+                    '/reviews',
+                    textStyle,
+                    iconColor,
+                  ),
+                ],
+              ),
+            ),
           // Main content
-          Expanded(child: widget.child),
+          Expanded(
+            child: Container(
+              color: Colors.grey.shade50, // Light background for content
+              child: widget.child,
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildNavItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String path,
+    TextStyle textStyle,
+    Color iconColor,
+  ) {
+    // Simple way to highlight active route - checking if current location starts with path
+    // Note: This is a basic check. GoRouter state provides better ways but this works for simple cases.
+    final isSelected = GoRouterState.of(context).uri.toString() == path;
+
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.white : iconColor),
+      title: Text(
+        title,
+        style: textStyle.copyWith(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      tileColor: isSelected ? Colors.white.withOpacity(0.1) : null,
+      onTap: () => context.go(path),
+    );
+  }
 }
 
-class OverviewView extends StatelessWidget {
-  const OverviewView({super.key});
-
+// Helper widget because IconTheme isn't applying directly in some contexts
+class HelperIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  const HelperIcon(this.icon, {super.key, required this.color});
   @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Dashboard Overview'));
-  }
+  Widget build(BuildContext context) => Icon(icon, color: color);
 }

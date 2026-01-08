@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/services/connectivity_service.dart';
 import 'auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +15,20 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _handleGoogleSignIn() async {
+    // 1. Check Connectivity First
+    final isConnected = await ConnectivityService.instance.isConnected;
+    if (!isConnected) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No Internet. Please check your connection.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await context.read<AuthProvider>().signInWithGoogle();
@@ -55,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Cafe 360',
+              '360 Cafe&Outlets',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).primaryColor,

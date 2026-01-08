@@ -3,10 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+class AppException implements Exception {
+  final String message;
+  AppException(this.message);
+  @override
+  String toString() => message;
+}
+
 class ApiClient {
   final String baseUrl;
 
-  ApiClient({this.baseUrl = 'http://192.168.42.20:3000'}); // Real Device IP
+  ApiClient({this.baseUrl = 'http://192.168.0.102:3000'}); // Local LAN IP
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -17,54 +24,61 @@ class ApiClient {
     };
   }
 
-  Future<dynamic> get(String endpoint) async {
-    final headers = await _getHeaders();
-    try {
-      final response = await http
-          .get(Uri.parse('$baseUrl$endpoint'), headers: headers)
-          .timeout(const Duration(seconds: 15));
+  Future<dynamic> get(String endpoint) {
+    return _retryRequest(() async {
+      final headers = await _getHeaders();
+      try {
+        final response = await http
+            .get(Uri.parse('$baseUrl$endpoint'), headers: headers)
+            .timeout(const Duration(seconds: 30));
+        return _handleResponse(response);
+      } catch (e) {
+        debugPrint('API GET Error: $e');
+        rethrow;
+      }
+    });
+  }
+
+  Future<dynamic> post(String endpoint, dynamic data) {
+    return _retryRequest(() async {
+      final headers = await _getHeaders();
+      try {
+        final body = await compute(_encodeJson, data);
+        final response = await http
+            .post(Uri.parse('$baseUrl$endpoint'), headers: headers, body: body)
+            .timeout(const Duration(seconds: 30));
+        return _handleResponse(response);
+      } catch (e) {
+        debugPrint('API POST Error: $e');
+        rethrow;
+      }
+    });
+  }
+
+  Future<dynamic> put(String endpoint, dynamic data) {
+    return _retryRequest(() async {
+      final headers = await _getHeaders();
+      final body = await compute(_encodeJson, data);
+      final response = await http.put(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: headers,
+        body: body,
+      );
       return _handleResponse(response);
-    } catch (e) {
-      debugPrint('API GET Error: $e');
-      rethrow;
-    }
+    });
   }
 
-  Future<dynamic> post(String endpoint, dynamic data) async {
-    final headers = await _getHeaders();
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl$endpoint'),
-            headers: headers,
-            body: jsonEncode(data),
-          )
-          .timeout(const Duration(seconds: 15));
+  Future<dynamic> patch(String endpoint, dynamic data) {
+    return _retryRequest(() async {
+      final headers = await _getHeaders();
+      final body = await compute(_encodeJson, data);
+      final response = await http.patch(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: headers,
+        body: body,
+      );
       return _handleResponse(response);
-    } catch (e) {
-      debugPrint('API POST Error: $e');
-      rethrow;
-    }
-  }
-
-  Future<dynamic> put(String endpoint, dynamic data) async {
-    final headers = await _getHeaders();
-    final response = await http.put(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
-    return _handleResponse(response);
-  }
-
-  Future<dynamic> patch(String endpoint, dynamic data) async {
-    final headers = await _getHeaders();
-    final response = await http.patch(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
-    return _handleResponse(response);
+    });
   }
 
   Future<dynamic> postMultipart(
@@ -118,11 +132,33 @@ class ApiClient {
     return _handleResponse(response);
   }
 
-  dynamic _handleResponse(http.Response response) {
+  Future<T> _retryRequest<T>(
+    Future<T> Function() request, {
+    int retries = 3,
+  }) async {
+    int attempts = 0;
+    while (true) {
+      attempts++;
+      try {
+        return await request();
+      } catch (e) {
+        if (attempts >= retries) rethrow; // Give up
+
+        // Wait before retrying (Exponential Backoff: 1s, 2s, 4s...)
+        final delay = Duration(seconds: 1 * (1 << (attempts - 1)));
+        debugPrint(
+          'Network error ($e). Retrying in ${delay.inSeconds}s... (Attempt $attempts/$retries)',
+        );
+        await Future.delayed(delay);
+      }
+    }
+  }
+
+  Future<dynamic> _handleResponse(http.Response response) async {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
       try {
-        return jsonDecode(response.body);
+        return await compute(_decodeJson, response.body);
       } catch (e) {
         if (response.body.trim().startsWith('<')) {
           final preview = response.body.length > 200
@@ -134,7 +170,33 @@ class ApiClient {
       }
     } else {
       debugPrint('API Error ${response.statusCode}: ${response.body}');
-      throw Exception('Error ${response.statusCode}: ${response.body}');
+
+      String errorMessage =
+          'Something went wrong (Error ${response.statusCode})';
+
+      try {
+        final body =
+            await compute(_decodeJson, response.body) as Map<String, dynamic>;
+        if (body.containsKey('error')) {
+          errorMessage = body['error'];
+        } else if (body.containsKey('message')) {
+          errorMessage = body['message'];
+        }
+      } catch (_) {
+        // Fallback to raw body if not JSON, but truncated
+        if (response.body.length < 100) errorMessage = response.body;
+      }
+
+      throw AppException(errorMessage);
     }
   }
+}
+
+// Top-level functions for compute
+String _encodeJson(dynamic data) {
+  return jsonEncode(data);
+}
+
+dynamic _decodeJson(String source) {
+  return jsonDecode(source);
 }

@@ -22,6 +22,7 @@ import 'features/auth/auth_provider.dart';
 import 'features/home/shop_provider.dart';
 import 'features/cart/cart_provider.dart';
 import 'features/address/address_provider.dart';
+import 'core/services/connectivity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,66 +42,137 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => AddressProvider()),
       ],
-      child: MaterialApp.router(
-        title: 'Cafe 360 Customer',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepOrange,
-            primary: Colors.deepOrange,
-            secondary: Colors.orangeAccent,
-          ),
-          textTheme: GoogleFonts.interTextTheme(),
-        ),
-        routerConfig: _router,
-      ),
+      child: const CustomerApp(),
     );
   }
 }
 
-final _router = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(
-      path: '/complete-profile',
-      builder: (context, state) => const CompleteProfileScreen(),
-    ),
-    ShellRoute(
-      builder: (context, state, child) {
-        return MainScaffold(child: child);
-      },
+class CustomerApp extends StatelessWidget {
+  const CustomerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    // Rebuild router when auth state changes
+    final router = GoRouter(
+      refreshListenable: authProvider,
+      initialLocation: '/login',
+      debugLogDiagnostics: true,
       routes: [
-        GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
         GoRoute(
-          path: '/orders',
-          builder: (context, state) => const OrdersScreen(),
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
+          path: '/complete-profile',
+          builder: (context, state) => const CompleteProfileScreen(),
+        ),
+        ShellRoute(
+          builder: (context, state, child) {
+            return MainScaffold(child: child);
+          },
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: '/orders',
+              builder: (context, state) => const OrdersScreen(),
+            ),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/shop/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final shopData = state.extra as Map<String, dynamic>?;
+            return ShopDetailsScreen(shopId: id, shopData: shopData);
+          },
+        ),
+        GoRoute(
+          path: '/checkout',
+          builder: (context, state) => const CheckoutScreen(),
+        ),
+        GoRoute(
+          path: '/addresses',
+          builder: (context, state) => const ManageAddressesScreen(),
+        ),
+        GoRoute(
+          path: '/add-address',
+          builder: (context, state) => const AddAddressScreen(),
         ),
       ],
-    ),
-    GoRoute(
-      path: '/shop/:id',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
-        final shopData = state.extra as Map<String, dynamic>?;
-        return ShopDetailsScreen(shopId: id, shopData: shopData);
+      redirect: (context, state) {
+        final isLoggedIn = authProvider.user != null;
+        final isLoggingIn = state.uri.toString() == '/login';
+
+        // If loading, don't redirect yet (optional, but safely handled by splash usually)
+        if (authProvider.isLoading) return null;
+
+        if (!isLoggedIn && !isLoggingIn) return '/login';
+
+        if (isLoggedIn && isLoggingIn) {
+          // Check profile completeness
+          if (authProvider.isProfileComplete) {
+            return '/home';
+          } else {
+            return '/complete-profile';
+          }
+        }
+        return null;
       },
-    ),
-    GoRoute(
-      path: '/checkout',
-      builder: (context, state) => const CheckoutScreen(),
-    ),
-    GoRoute(
-      path: '/addresses',
-      builder: (context, state) => const ManageAddressesScreen(),
-    ),
-    GoRoute(
-      path: '/add-address',
-      builder: (context, state) => const AddAddressScreen(),
-    ),
-  ],
-);
+    );
+
+    return MaterialApp.router(
+      title: '360 Customer',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepOrange,
+          primary: Colors.deepOrange,
+          secondary: Colors.orangeAccent,
+        ),
+        textTheme: GoogleFonts.interTextTheme(),
+      ),
+      builder: (context, child) {
+        return StreamBuilder<bool>(
+          stream: ConnectivityService.instance.connectionStatus,
+          initialData: true,
+          builder: (context, snapshot) {
+            final isConnected = snapshot.data ?? true;
+            return Stack(
+              children: [
+                if (child != null) child,
+                if (!isConnected)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Material(
+                      color: Colors.red,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: const Text(
+                          'No Internet Connection',
+                          style: TextStyle(color: Colors.white),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+      routerConfig: router,
+    );
+  }
+}

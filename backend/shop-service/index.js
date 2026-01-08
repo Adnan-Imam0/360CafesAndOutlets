@@ -9,6 +9,12 @@ const PORT = process.env.PORT || 3003;
 app.use(cors());
 app.use(express.json());
 
+// Request Logging Middleware
+app.use((req, res, next) => {
+    console.log(`[ShopService] Received: ${req.method} ${req.url} (original: ${req.originalUrl})`);
+    next();
+});
+
 // DB Connection
 const pool = new Pool({
     user: process.env.DB_USER || 'admin',
@@ -29,12 +35,32 @@ app.get('/health', async (req, res) => {
 
 // Routes
 const shopRoutes = require('./routes/shopRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+
+// Mount routes on both /api/ and root paths to handle Gateway rewrite issues
+// Mount routes
+app.use('/api/reviews', reviewRoutes);
+app.use('/reviews', reviewRoutes);
 
 app.use('/shops', shopRoutes);
-app.use('/categories', categoryRoutes);
+app.use('/api/shops', shopRoutes); // Restore compatibility just in case
+
+app.use('/api/products', productRoutes);
 app.use('/products', productRoutes);
+
+const categoryRoutes = require('./routes/categoryRoutes');
+app.use('/api/categories', categoryRoutes);
+app.use('/categories', categoryRoutes);
+
+
+app.use(express.static('uploads'));
+
+// Catch-all 404
+app.use((req, res) => {
+    console.error(`[ShopService] 404 Not Found: ${req.method} ${req.url}`);
+    res.status(404).send(`ShopService: Cannot ${req.method} ${req.url}`);
+});
 
 app.listen(PORT, () => {
     console.log(`Shop Service running on port ${PORT}`);

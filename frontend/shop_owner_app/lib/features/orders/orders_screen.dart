@@ -184,7 +184,7 @@ class OrderList extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "\$${item['price']}",
+                              "Rs. ${item['price']}",
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,

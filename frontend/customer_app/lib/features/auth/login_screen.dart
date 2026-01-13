@@ -63,10 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.delivery_dining,
-              size: 80,
-              color: Colors.deepOrange,
+            Image.asset(
+              'assets/images/logo.png',
+              width: 150,
+              height: 150,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 24),
             Text(
@@ -86,28 +87,34 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _handleGoogleSignIn,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.deepOrange,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.login),
-                label: const Text('Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black87,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    side: BorderSide(color: Colors.grey.shade300),
-                  ),
-                ),
+              child: Consumer<AuthProvider>(
+                builder: (context, auth, child) {
+                  return ElevatedButton.icon(
+                    onPressed: (auth.isLoading || _isLoading)
+                        ? null
+                        : _handleGoogleSignIn,
+                    icon: (auth.isLoading || _isLoading)
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepOrange,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.login),
+                    label: const Text('Sign in with Google'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

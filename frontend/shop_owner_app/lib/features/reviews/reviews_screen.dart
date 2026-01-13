@@ -37,6 +37,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       appBar: AppBar(title: const Text('Customer Reviews')),
       body: reviewProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
+          : (reviewProvider.error != null)
+          ? Center(child: Text('Error: ${reviewProvider.error}'))
           : Column(
               children: [
                 // Stats Header

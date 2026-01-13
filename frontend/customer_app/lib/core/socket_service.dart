@@ -9,7 +9,10 @@ class SocketService {
   // Use the SAME IP as ApiClient!
   // If you are on Emulator: http://10.0.2.2:3000
   // If you are on Real Device: http://192.168.0.102:3000
-  static const String _serverUrl = 'http://192.168.0.102:3000';
+  // Determine URL dynamically
+  String get _serverUrl {
+    return kIsWeb ? 'http://localhost:3008' : 'http://192.168.137.1:3008';
+  }
 
   factory SocketService() {
     return _instance;

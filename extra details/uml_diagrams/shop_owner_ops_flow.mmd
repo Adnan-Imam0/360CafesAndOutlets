@@ -1,0 +1,43 @@
+---
+config:
+      theme: redux
+---
+flowchart TD
+    Dashboard(["Owner Dashboard"])
+    
+    Dashboard --> CheckStatus{Shop Status}
+    CheckStatus -- "Closed" --> ToggleOpen["Toggle 'Open'"]
+    CheckStatus -- "Open" --> ListenOrders["Listen for Orders"]
+    
+    ListenOrders --> IncomingEvent{New Order?}
+    IncomingEvent -- "Yes" --> PlaySound["Play Alert Sound"]
+    PlaySound --> ViewOrder[/"View Order Details"/]
+    
+    ViewOrder --> Decision{Accept/Reject?}
+    
+    Decision -- "Reject" --> InputReason["Input Rejection Reason"]
+    InputReason --> API_Reject["POST /orders/reject"]
+    API_Reject --> Dashboard
+    
+    Decision -- "Accept" --> API_Accept["POST /orders/accept"]
+    API_Accept --> PreparingList[/"Moved to 'Preparing' Tab"/]
+    
+    PreparingList --> MarkReady["Mark as 'Ready'"]
+    MarkReady --> NotifyCust["Notify Customer"]
+    NotifyCust --> ReadyList[/"Moved to 'Ready' Tab"/]
+    
+    ReadyList --> Handover["Customer Pick Up"]
+    Handover --> MarkComplete["Mark 'Completed'"]
+    MarkComplete --> History[/"Moved to History"/]
+    
+    %% Menu Management Branch
+    Dashboard --> ManageMenu["Tap 'Manage Menu'"]
+    ManageMenu --> MenuList[/"Product List"/]
+    
+    MenuList --> AddNew["Add New Item"]
+    AddNew --> FillForm[/"Product Form"/]
+    FillForm --> SaveItem["Save Product"]
+    SaveItem --> MenuList
+    
+    MenuList --> ToggleStock["Toggle Availability"]
+    ToggleStock --> API_Stock["PATCH /products/:id"]

@@ -26,9 +26,21 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await context.read<AuthProvider>().updatePhoneNumber(
-        _phoneController.text.trim(),
-      );
+      final auth = context.read<AuthProvider>();
+
+      // If profile is null, we need to REGISTER (Create) from scratch
+      if (auth.customerProfile == null) {
+        // Name can be fetched from the Firebase User object inside AuthProvider
+        // pass empty name here, letting AuthProvider use the Google display name by default
+        await auth.registerCustomer(
+          '',
+          phoneNumber: _phoneController.text.trim(),
+        );
+      } else {
+        // If profile exists (rare here, but possible), just update number
+        await auth.updatePhoneNumber(_phoneController.text.trim());
+      }
+
       if (mounted) {
         context.go('/home');
       }

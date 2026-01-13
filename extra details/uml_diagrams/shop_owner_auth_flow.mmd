@@ -1,0 +1,36 @@
+---
+config:
+      theme: redux
+---
+flowchart TD
+    Start(["Start App (Shop Owner)"])
+    Start --> CheckAuth{Has Token?}
+    
+    CheckAuth -- Yes --> ValidateToken{Verify w/ Backend}
+    ValidateToken -- Valid --> Dashboard(["Owner Dashboard"])
+    
+    CheckAuth -- No --> LoginScreen[/"Login Screen"\]
+    ValidateToken -- Invalid --> LoginScreen
+    
+    LoginScreen --> RegisterBtn(["Tap 'Register as Partner'"])
+    
+    RegisterBtn --> BasicInfo[/"Step 1: Basic Info\n(Name, Email, Password, Phone)"/]
+    BasicInfo --> VerifyEmail{Verify Email}
+    
+    VerifyEmail -- "Verified" --> BusinessInfo[/"Step 2: Business Info\n(CNIC, License #, Tax ID)"/]
+    VerifyEmail -- "Pending" --> ResendEmail["Resend Verification"]
+    ResendEmail --> VerifyEmail
+    
+    BusinessInfo --> ShopDetails[/"Step 3: Shop Details\n(Shop Name, Type, Address)"/]
+    
+    ShopDetails --> UploadDocs[/"Step 4: Upload Documents\n(License Photo, CNIC Copy)"/]
+    
+    UploadDocs --> SubmitReg["Submit Registration"]
+    
+    SubmitReg --> PendingApproval(["Wait for Admin Approval"])
+    
+    PendingApproval --> AdminReview{Admin Review}
+    
+    AdminReview -- "Approved" --> Dashboard
+    AdminReview -- "Rejected" --> ShowRejection["Show Rejection Reason"]
+    ShowRejection --> BusinessInfo

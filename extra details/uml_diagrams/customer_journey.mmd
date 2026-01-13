@@ -1,0 +1,49 @@
+stateDiagram
+    [*] --> Splash
+
+    Splash --> Guest: No Token Found
+    Splash --> Authenticated: Token Valid
+
+    state Guest {
+        [*] --> LoginScreen
+        LoginScreen --> RegisterScreen: Sign Up
+        RegisterScreen --> LoginScreen: Registered
+        LoginScreen --> [*]: Login Success
+    }
+
+    Guest --> Authenticated: Auth Success
+
+    state Authenticated {
+        [*] --> BrowseShops
+        
+        BrowseShops --> ShopMenu: taps Shop
+        
+        state ShopMenu {
+            [*] --> ViewingItems
+            ViewingItems --> ItemDetails: taps Product
+            ItemDetails --> ViewingItems: Add to Cart
+        }
+
+        ShopMenu --> Cart: View Cart
+        Cart --> Checkout: Proceed
+        
+        state Checkout {
+            [*] --> ReviewOrder
+            ReviewOrder --> PlacingOrder: Confirm
+            PlacingOrder --> OrderSuccess: API 200 OK
+            PlacingOrder --> ReviewOrder: API Error
+        }
+
+        OrderSuccess --> OrderTracking: View Status
+        
+        state OrderTracking {
+            [*] --> Pending
+            Pending --> Preparing: Shop Accepts
+            Preparing --> Ready: Kitchen Done
+            Ready --> Completed: Picked Up
+        }
+        
+        OrderTracking --> BrowseShops: Home
+    }
+
+    Authenticated --> Guest: Logout

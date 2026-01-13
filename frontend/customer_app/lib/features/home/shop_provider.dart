@@ -32,6 +32,8 @@ class ShopProvider with ChangeNotifier {
 
   Future<void> fetchShops({String? searchQuery, String? category}) async {
     _isLoading = true;
+    _shops =
+        []; // Clear current list to avoid showing stale data during/after fetch
     notifyListeners();
 
     try {

@@ -1,0 +1,29 @@
+gantt
+    title 2026 Roadmap
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b
+
+    section Planning
+    Requirements     :plan1, 2026-02-01, 20d
+    Architecture     :plan2, after plan1, 20d
+
+    section Design
+    UI/UX Design     :des1, 2026-03-15, 30d
+    DB Schema        :des2, 2026-03-20, 15d
+
+    section Backend
+    API Setup        :back1, 2026-04-15, 20d
+    Auth/User Svc    :back2, after back1, 25d
+    Shop Svc         :back3, after back2, 30d
+    Order Svc        :back4, after back3, 30d
+
+    section Frontend
+    Cust App Init    :front1, 2026-05-15, 20d
+    Shop App Init    :front2, 2026-05-15, 20d
+    UI Dev           :front3, after front1, 60d
+    API Connecting   :front4, after front3, 40d
+
+    section Launch
+    Integ Testing    :test1, 2026-10-01, 30d
+    Beta UAT         :test2, after test1, 30d
+    Release          :deploy, 2026-12-01, 20d

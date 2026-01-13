@@ -9,7 +9,7 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
 });
 
-// GET /api/shops/:shopId/reviews
+
 const getShopReviews = async (req, res) => {
     const { shopId } = req.params;
     try {
@@ -26,7 +26,7 @@ const getShopReviews = async (req, res) => {
     }
 };
 
-// POST /api/reviews (For Customer App / Seeding)
+
 const createReview = async (req, res) => {
     const { shop_id, product_id, customer_id, customer_name, rating, comment } = req.body;
     try {

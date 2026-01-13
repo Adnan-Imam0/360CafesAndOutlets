@@ -27,7 +27,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         _passwordController.text.trim(),
       );
       if (mounted) {
-        context.go('/');
+        context.go('/verify-email');
       }
     } catch (e) {
       if (mounted) {

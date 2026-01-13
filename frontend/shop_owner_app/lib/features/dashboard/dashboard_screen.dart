@@ -27,7 +27,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final shopProvider = context.read<ShopProvider>();
 
     if (authProvider.isAuthenticated && shopProvider.shop == null) {
-      shopProvider.fetchMyShop(authProvider.user!.uid);
+      shopProvider.fetchMyShop(authProvider.user!.uid).then((_) {
+        // If still null after fetch, redirect to create shop
+        if (mounted && context.read<ShopProvider>().shop == null) {
+          // Check if we are already on create-shop to avoid loop (though ShellRoute usually handles this,
+          // but create-shop is INSIDE shell route in my main.dart config.
+          // Wait, create-shop should probably be ACCESSIBLE.
+          // Let's check main.dart: /create-shop is defined.
+
+          final currentLocation = GoRouterState.of(context).uri.toString();
+          if (currentLocation != '/create-shop' &&
+              currentLocation != '/create-profile') {
+            context.go('/create-shop');
+          }
+        }
+      });
     }
   }
 
@@ -58,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const HelperIcon(Icons.logout, color: Colors.white),
             onPressed: () {
+              context.read<ShopProvider>().clear();
               context.read<AuthProvider>().logout();
               context.go('/login');
             },

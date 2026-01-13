@@ -1,0 +1,41 @@
+block-beta
+  columns 1
+  
+  block:Apps
+    columns 2
+    CApp[("Customer App")]
+    SApp[("Shop App")]
+  end
+
+  blockArrow1<["REST API / WebSocket"]>(down)
+
+  Gateway[["API Gateway"]]
+
+  blockArrow2<["Proxies To"]>(down)
+
+  block:Microservices
+    columns 4
+    Auth["Auth Service"]
+    User["User Service"]
+    Shop["Shop Service"]
+    Order["Order Service"]
+  end
+
+  blockArrow3<["Persists To"]>(down)
+
+  DB(("PostgreSQL DB"))
+
+  %% Styling
+  style Apps fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+  style CApp fill:#ffffff,stroke:#1565c0
+  style SApp fill:#ffffff,stroke:#1565c0
+  
+  style Gateway fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+  
+  style Microservices fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style Auth fill:#ffffff,stroke:#2e7d32
+  style User fill:#ffffff,stroke:#2e7d32
+  style Shop fill:#ffffff,stroke:#2e7d32
+  style Order fill:#ffffff,stroke:#2e7d32
+  
+  style DB fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px

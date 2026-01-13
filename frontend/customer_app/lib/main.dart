@@ -3,7 +3,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
+
+// Screens
+import 'features/onboarding/onboarding_screen.dart';
 
 // Screens
 import 'features/auth/login_screen.dart';
@@ -14,6 +18,7 @@ import 'features/home/main_scaffold.dart';
 import 'features/shop_details/shop_details_screen.dart';
 import 'features/orders/checkout_screen.dart';
 import 'features/orders/orders_screen.dart';
+import 'features/orders/order_detail_screen.dart';
 import 'features/address/manage_addresses_screen.dart';
 import 'features/address/add_address_screen.dart';
 
@@ -27,28 +32,36 @@ import 'core/services/connectivity_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
+
+  runApp(MyApp(onboardingSeen: onboardingSeen));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool onboardingSeen;
+  const MyApp({super.key, required this.onboardingSeen});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..setOnboardingSeen(onboardingSeen),
+        ),
         ChangeNotifierProvider(create: (_) => ShopProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => AddressProvider()),
       ],
-      child: const CustomerApp(),
+      child: CustomerApp(onboardingSeen: onboardingSeen),
     );
   }
 }
 
 class CustomerApp extends StatelessWidget {
-  const CustomerApp({super.key});
+  final bool onboardingSeen;
+  const CustomerApp({super.key, required this.onboardingSeen});
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +73,10 @@ class CustomerApp extends StatelessWidget {
       initialLocation: '/login',
       debugLogDiagnostics: true,
       routes: [
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
         GoRoute(
           path: '/login',
           builder: (context, state) => const LoginScreen(),
@@ -80,6 +97,14 @@ class CustomerApp extends StatelessWidget {
             GoRoute(
               path: '/orders',
               builder: (context, state) => const OrdersScreen(),
+            ),
+            GoRoute(
+              path: '/orders/:id',
+              builder: (context, state) {
+                final id = state.pathParameters['id']!;
+                final orderData = state.extra as Map<String, dynamic>?;
+                return OrderDetailScreen(orderId: id, orderData: orderData);
+              },
             ),
             GoRoute(
               path: '/profile',
@@ -110,21 +135,31 @@ class CustomerApp extends StatelessWidget {
       ],
       redirect: (context, state) {
         final isLoggedIn = authProvider.user != null;
+        final hasSeenOnboarding = authProvider.onboardingSeen;
         final isLoggingIn = state.uri.toString() == '/login';
 
         // If loading, don't redirect yet (optional, but safely handled by splash usually)
         if (authProvider.isLoading) return null;
 
+        // Check Onboarding
+        final onOnboarding = state.uri.toString() == '/onboarding';
+        if (!hasSeenOnboarding && !onOnboarding) return '/onboarding';
+        if (!hasSeenOnboarding && onOnboarding)
+          return null; // Stay on onboarding
+
+        // If trying to access onboarding but already seen, redirect to login/home
+        if (hasSeenOnboarding && onOnboarding) return '/login';
+
         if (!isLoggedIn && !isLoggingIn) return '/login';
 
         if (isLoggedIn && isLoggingIn) {
-          // Check profile completeness
           if (authProvider.isProfileComplete) {
             return '/home';
           } else {
             return '/complete-profile';
           }
         }
+
         return null;
       },
     );

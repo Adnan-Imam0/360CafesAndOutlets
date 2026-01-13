@@ -1,0 +1,44 @@
+---
+config:
+      theme: redux
+---
+flowchart TD
+    Dashboard(["Dashboard (Home)"])
+    Dashboard --> BrowseShops[/"Browse Shop List"/]
+    
+    BrowseShops --> SelectShop(["Select a Shop"])
+    SelectShop --> ShopMenu[/"View Shop Menu"/]
+    
+    ShopMenu --> SelectCategory{Select Category}
+    SelectCategory --> ViewProducts["View Products"]
+    
+    ViewProducts --> SelectProduct(["Tap Product"])
+    SelectProduct --> ItemDetails[/"Item Details Screen"/]
+    
+    ItemDetails --> AdjustQty["Adjust Quantity"]
+    AdjustQty --> AddToCart(["Add to Cart"])
+    
+    AddToCart --> UpdateCart[("Update Local Cart")]
+    UpdateCart --> ShopMenu
+    
+    ShopMenu --> ViewCart(["Tap Cart Icon"])
+    ViewCart --> CartScreen[/"Cart Screen"/]
+    
+    CartScreen --> ReviewItems{Review Items}
+    ReviewItems -- "Modify" --> AdjustCart["Update/Remove Items"]
+    AdjustCart --> CartScreen
+    
+    ReviewItems -- "Proceed" --> Checkout(["Tap Checkout"])
+    
+    Checkout --> OrderSummary[/"Order Summary"/]
+    OrderSummary --> ConfirmOrder(["Place Order"])
+    
+    ConfirmOrder --> API_Call["POST /orders"]
+    
+    API_Call --> API_Response{API Success?}
+    
+    API_Response -- "Yes" --> OrderSuccess(["Order Placed Success"])
+    API_Response -- "No" --> ErrorMsg["Show Error"]
+    ErrorMsg --> OrderSummary
+    
+    OrderSuccess --> TrackOrder[/"Track Order Screen"/]

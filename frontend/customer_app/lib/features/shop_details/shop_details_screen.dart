@@ -116,6 +116,7 @@ class _ShopDetailsScreenState extends State<ShopDetailsScreen> {
               _selectedCategory = selected ? categoryValue : null;
             }
           });
+          _fetchFilteredProducts(); // Trigger fetch immediately
         },
         selectedColor: Theme.of(context).primaryColor,
         labelStyle: TextStyle(

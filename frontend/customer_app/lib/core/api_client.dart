@@ -13,7 +13,11 @@ class AppException implements Exception {
 class ApiClient {
   final String baseUrl;
 
-  ApiClient({this.baseUrl = 'http://192.168.0.102:3000'}); // Local LAN IP
+  ApiClient({
+    this.baseUrl = kIsWeb
+        ? 'http://localhost:3006'
+        : 'http://192.168.137.1:3006',
+  }); // Local for Web, Hotspot for Mobile
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

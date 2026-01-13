@@ -13,7 +13,11 @@ class AppException implements Exception {
 class ApiClient {
   final String baseUrl;
 
-  ApiClient({this.baseUrl = 'http://localhost:3000'}); // Local Docker URL
+  ApiClient({
+    this.baseUrl = kIsWeb
+        ? 'http://localhost:3006'
+        : 'http://192.168.137.1:3006',
+  }); // Local for Web, Hotspot for Mobile
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,11 +48,12 @@ class ApiClient {
         return _handleResponse(response);
       } catch (e) {
         // Stop retrying on 404 (Not Found), 400 (Bad Request), or 409 (Conflict)
-        // Stop retrying on 404 (Not Found), 400 (Bad Request), or 409 (Conflict)
         final errorStr = e.toString();
+        // Check for specific error codes or messages to abort
         if (errorStr.contains('Error 404') ||
             errorStr.contains('Error 400') ||
-            errorStr.contains('Error 409')) {
+            errorStr.contains('Error 409') ||
+            errorStr.contains('Owner not found')) {
           debugPrint('Aborting retry due to permanent error: $errorStr');
           rethrow;
         }
@@ -193,13 +198,13 @@ class ApiClient {
       try {
         final body = jsonDecode(response.body);
         if (body is Map && body.containsKey('error')) {
-          errorMessage = body['error'];
+          errorMessage = 'Error ${response.statusCode}: ${body['error']}';
         } else if (body is Map && body.containsKey('message')) {
-          errorMessage = body['message'];
+          errorMessage = 'Error ${response.statusCode}: ${body['message']}';
         }
       } catch (_) {
-        // Fallback to raw body if not JSON, but truncated
-        if (response.body.length < 100) errorMessage = response.body;
+        if (response.body.length < 100)
+          errorMessage = 'Error ${response.statusCode}: ${response.body}';
       }
 
       throw AppException(errorMessage);

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import 'order_provider.dart';
+import '../shops/shop_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -483,6 +484,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         double.tryParse(_order!['total_amount'].toString()) ?? 0.0;
     final dateStr = _formatDate(_order!['created_at']);
 
+    final shop = context.read<ShopProvider>().shop;
+    final shopName = shop?['shop_name'] ?? 'Cafe 360';
+
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.roll80,
@@ -492,7 +496,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             children: [
               pw.Center(
                 child: pw.Text(
-                  'Cafe 360',
+                  shopName,
                   style: pw.TextStyle(
                     fontWeight: pw.FontWeight.bold,
                     fontSize: 24,

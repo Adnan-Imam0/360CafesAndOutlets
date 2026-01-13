@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const shopRoutes = require('./routes/shopRoutes');
 
-// Mock specific parts of index.js
+
 app.use('/api/shops', shopRoutes);
 app.use('/shops', shopRoutes);
 

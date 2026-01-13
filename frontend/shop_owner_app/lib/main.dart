@@ -15,6 +15,7 @@ import 'features/shops/menu_screen.dart';
 import 'features/shops/add_product_screen.dart';
 import 'features/shops/edit_shop_screen.dart';
 import 'features/auth/registration_screen.dart';
+import 'features/auth/verify_email_screen.dart';
 import 'features/shops/category_provider.dart';
 import 'features/reviews/review_provider.dart';
 import 'features/reviews/reviews_screen.dart';
@@ -66,8 +67,21 @@ class AppRouter extends StatelessWidget {
         final location = state.uri.toString();
         final loggingIn = location == '/login' || location == '/register';
 
+        final verified = authProvider.user?.emailVerified ?? false;
+
         if (!initialized) return '/splash';
         if (!loggedIn && !loggingIn) return '/login';
+
+        // Block unverified users from accessing main app
+        if (loggedIn && !verified && location != '/verify-email') {
+          return '/verify-email';
+        }
+
+        // Allow verified users to enter
+        if (loggedIn && verified && location == '/verify-email') {
+          return '/';
+        }
+
         if (loggedIn && (loggingIn || location == '/splash')) return '/';
         return null; // No redirect
       },
@@ -84,6 +98,10 @@ class AppRouter extends StatelessWidget {
         GoRoute(
           path: '/register',
           builder: (context, state) => const RegistrationScreen(),
+        ),
+        GoRoute(
+          path: '/verify-email',
+          builder: (context, state) => const VerifyEmailScreen(),
         ),
         ShellRoute(
           builder: (context, state, child) =>

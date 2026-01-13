@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 3008;
 
 // Firebase Admin Setup
 const admin = require('firebase-admin');

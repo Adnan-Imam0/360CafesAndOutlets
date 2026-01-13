@@ -44,6 +44,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    final auth = context.read<AuthProvider>();
+    final phone = auth.customerProfile?['phone_number'] as String?;
+    // Check if phone contains letters (dummy) or is empty
+    final isInvalidPhone =
+        phone == null || phone.isEmpty || phone.contains(RegExp(r'[a-zA-Z]'));
+
+    if (isInvalidPhone) {
+      _showUpdatePhoneDialog();
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -295,5 +306,75 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       default:
         return Icons.location_on;
     }
+  }
+
+  void _showUpdatePhoneDialog() {
+    final phoneController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Phone Number Required'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'To place an order, we need a valid phone number so the rider can contact you.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Phone Number',
+                prefixIcon: Icon(Icons.phone),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newPhone = phoneController.text.trim();
+              if (newPhone.isNotEmpty) {
+                try {
+                  Navigator.pop(ctx); // Close dialog
+                  // Show loading
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Updating number...')),
+                  );
+                  await context.read<AuthProvider>().updatePhoneNumber(
+                    newPhone,
+                  );
+
+                  if (mounted) {
+                    // Check again and place order if valid (or just let them click button again)
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Number updated! Click Place Order again.',
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to update number: $e')),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Save & Continue'),
+          ),
+        ],
+      ),
+    );
   }
 }

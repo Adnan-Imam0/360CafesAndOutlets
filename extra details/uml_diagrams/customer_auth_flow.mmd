@@ -1,0 +1,36 @@
+---
+config:
+      theme: redux
+---
+flowchart TD
+    Start(["Start App"])
+    Start --> CheckAuth{Has Local Token?}
+    
+    CheckAuth -- Yes --> ValidateToken{Verify w/ Backend}
+    ValidateToken -- Valid --> Dashboard(["Go to Dashboard"])
+    
+    CheckAuth -- No --> LoginScreen[/"Login Screen"\]
+    ValidateToken -- Invalid --> LoginScreen
+    
+    LoginScreen --> GoogleBtn(["Tap 'Sign in with Google'"])
+    
+    GoogleBtn --> GAuth["Google Sign-In Modal"]
+    GAuth -- "User Cancels" --> LoginScreen
+    GAuth -- "Success" --> GetIDToken["Get Firebase ID Token"]
+    
+    GetIDToken --> CallBE["POST /auth/login (idToken)"]
+    
+    CallBE --> BEVerify{Backend Verifies}
+    
+    BEVerify -- "Invalid Token" --> LoginScreen
+    BEVerify -- "Valid" --> CheckDB{User Exists in DB?}
+    
+    CheckDB -- No --> CreateUser[("Create New User")]
+    CreateUser --> GenerateJWT["Generate Session JWT"]
+    
+    CheckDB -- Yes --> GenerateJWT
+    
+    GenerateJWT --> SendResponse["Return JWT to App"]
+    
+    SendResponse --> SaveLocal["Save Token Locally"]
+    SaveLocal --> Dashboard

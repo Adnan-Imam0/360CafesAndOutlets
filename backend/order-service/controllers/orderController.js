@@ -17,7 +17,7 @@ const createOrder = async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Create Order
+        
         const orderQuery = `
             INSERT INTO orders (customer_id, shop_id, delivery_address_id, total_amount, customer_name, customer_phone, delivery_address)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -27,7 +27,7 @@ const createOrder = async (req, res) => {
         const orderResult = await client.query(orderQuery, orderValues);
         const order = orderResult.rows[0];
 
-        // 2. Create Order Items
+        
         const itemQuery = `
             INSERT INTO order_items (order_id, product_id, quantity, price_per_item, product_name)
             VALUES ($1, $2, $3, $4, $5)
@@ -39,7 +39,7 @@ const createOrder = async (req, res) => {
 
         await client.query('COMMIT');
 
-        // Socket.io: Notify Shop
+        
         if (req.io) {
             req.io.to(`shop_${shop_id}`).emit('new_order', order);
             console.log(`Emitted new_order to shop_${shop_id}`);
@@ -113,7 +113,7 @@ const getOrdersByShop = async (req, res) => {
 };
 
 const updateOrderStatus = async (req, res) => {
-    const { id } = req.params; // order id
+    const { id } = req.params; 
     const { status } = req.body;
     try {
         const result = await pool.query('UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *', [status, id]);
@@ -124,18 +124,18 @@ const updateOrderStatus = async (req, res) => {
 
         const updatedOrder = result.rows[0];
 
-        // 1. Socket.io: Notify Customer (In-App)
+        
         if (req.io) {
             req.io.to(`user_${updatedOrder.customer_id}`).emit('order_status_updated', updatedOrder);
             console.log(`Emitted order_status_updated to user_${updatedOrder.customer_id}`);
         }
 
-        // 2. FCM: Notify Customer (Push Notification)
+        
         if (req.messaging) {
             try {
                 console.log(`[FCM] Attempting to notify customer ${updatedOrder.customer_id} for order ${updatedOrder.order_id}`);
 
-                // Fetch FCM Token from Customers table
+                
                 const customerResult = await pool.query('SELECT fcm_token FROM customers WHERE customer_id = $1', [updatedOrder.customer_id]);
 
                 if (customerResult.rows.length > 0 && customerResult.rows[0].fcm_token) {
@@ -150,7 +150,7 @@ const updateOrderStatus = async (req, res) => {
                         data: {
                             orderId: updatedOrder.order_id.toString(),
                             status: status,
-                            click_action: 'FLUTTER_NOTIFICATION_CLICK', // standard for flutter
+                            click_action: 'FLUTTER_NOTIFICATION_CLICK',
                         },
                         token: fcmToken,
                     };

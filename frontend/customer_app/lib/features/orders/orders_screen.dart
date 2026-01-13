@@ -130,46 +130,52 @@ class _OrdersScreenState extends State<OrdersScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Order #${order['order_id']}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
+            child: InkWell(
+              onTap: () {
+                context.push('/orders/${order['order_id']}', extra: order);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Order #${order['order_id']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusChip(order['status']),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Total: Rs. ${order['total_amount']}'),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat(
+                        'MMM dd, yyyy hh:mm a',
+                      ).format(DateTime.parse(order['created_at'])),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    if (isDelivered) ...[
+                      const Divider(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showReviewDialog(order),
+                          icon: const Icon(Icons.star_outline),
+                          label: const Text('Rate Order'),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _buildStatusChip(order['status']),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Total: Rs. ${order['total_amount']}'),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat(
-                      'MMM dd, yyyy hh:mm a',
-                    ).format(DateTime.parse(order['created_at'])),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  if (isDelivered) ...[
-                    const Divider(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showReviewDialog(order),
-                        icon: const Icon(Icons.star_outline),
-                        label: const Text('Rate Order'),
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           );

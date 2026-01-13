@@ -1,0 +1,46 @@
+sequenceDiagram
+    autonumber
+    actor C as Customer (Student)
+    participant App as Customer App
+    participant GW as API Gateway
+    participant OS as Order Service
+    participant AM as Auth Middleware
+    participant DB as PostgreSQL
+    participant Shop as Shop Owner App
+
+    Note over C, App: User taps "Checkout"
+
+    C->>App: Confirm Order
+    App->>GW: POST /orders {items: [], total: 500}<br/>Auth: Bearer <JWT>
+    GW->>OS: Proxy Request
+
+    rect rgb(240, 248, 255)
+        Note right of OS: Authentication Phase
+        OS->>AM: verifyToken(jwt)
+        AM-->>OS: User ID: 123 (Valid)
+    end
+
+    rect rgb(255, 250, 240)
+        Note right of OS: Validation Phase
+        OS->>DB: SELECT prices FROM products WHERE id IN (...)
+        DB-->>OS: Prices Matches
+    end
+
+    rect rgb(240, 255, 240)
+        Note right of OS: Transaction Phase
+        OS->>DB: BEGIN TRANSACTION
+        OS->>DB: INSERT INTO orders ...
+        OS->>DB: INSERT INTO order_items ...
+        OS->>DB: COMMIT
+        DB-->>OS: Order ID: #999 Created
+    end
+
+    par Real-time Notification
+        OS->>GW: socket.to('shop_45').emit('new_order')
+        GW->>Shop: Event: 'new_order' (Payload: #999)
+        Shop->>Shop: Play Audio Alert
+    and HTTP Response
+        OS-->>GW: 201 Created
+        GW-->>App: 201 Created {id: #999, status: 'pending'}
+        App-->>C: Show "Order Placed" Screen
+    end

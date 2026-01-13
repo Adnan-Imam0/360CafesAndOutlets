@@ -129,7 +129,7 @@ class OrderList extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () {
-              context.push('/order-details', extra: order);
+              context.push('/order-details/${order['order_id']}', extra: order);
             },
             child: Padding(
               padding: const EdgeInsets.all(16),

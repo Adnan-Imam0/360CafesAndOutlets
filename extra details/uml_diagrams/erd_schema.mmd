@@ -1,0 +1,90 @@
+erDiagram
+    %% Entities
+    CUSTOMER {
+        int customer_id PK
+        string firebase_uid
+        string phone_number
+        string display_name
+    }
+
+    SHOP_OWNER {
+        int owner_id PK
+        string firebase_uid
+        string email
+        string cnic
+    }
+
+    SHOP {
+        int shop_id PK
+        int owner_id FK
+        string shop_name
+        string status
+        boolean is_accepting_orders
+    }
+
+    CATEGORY {
+        int category_id PK
+        int shop_id FK
+        string name
+    }
+
+    PRODUCT {
+        int product_id PK
+        int shop_id FK
+        int category_id FK
+        string name
+        numeric price
+        boolean is_available
+    }
+
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        int shop_id FK
+        int address_id FK
+        numeric total_amount
+        string status
+    }
+
+    ORDER_ITEM {
+        int item_id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        numeric price_per_item
+    }
+
+    ADDRESS {
+        int address_id PK
+        int customer_id FK
+        string full_address
+        numeric latitude
+        numeric longitude
+    }
+
+    REVIEW {
+        int review_id PK
+        int product_id FK
+        int customer_id FK
+        int rating
+        string comment
+    }
+
+    %% Relationships
+    CUSTOMER ||--o{ ORDER : places
+    CUSTOMER ||--o{ ADDRESS : has
+    CUSTOMER ||--o{ REVIEW : writes
+
+    SHOP_OWNER ||--|{ SHOP : owns
+
+    SHOP ||--o{ ORDER : receives
+    SHOP ||--o{ PRODUCT : sells
+    SHOP ||--o{ CATEGORY : defines
+
+    CATEGORY ||--o{ PRODUCT : contains
+
+    ORDER ||--|{ ORDER_ITEM : includes
+    ORDER }o--o| ADDRESS : "delivered to"
+
+    PRODUCT ||--o{ ORDER_ITEM : "listed in"
+    PRODUCT ||--o{ REVIEW : "rated by"

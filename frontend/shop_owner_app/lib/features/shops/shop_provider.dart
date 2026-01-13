@@ -20,6 +20,40 @@ class ShopProvider with ChangeNotifier {
   Map<String, dynamic> get shopStats => _shopStats;
   bool get isLoading => _isLoading;
 
+  Future<void> registerOwner({
+    required String firebaseUid,
+    required String email,
+    required String username,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String cnic,
+    required String address,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _apiClient.post('/users/owner', {
+        'firebase_uid': firebaseUid,
+        'email': email,
+        'username': username,
+        'first_name': firstName,
+        'last_name': lastName,
+        'phone': phone,
+        'cnic': cnic,
+        'permanent_address': address,
+      });
+      // After registration, fetch the shop (which will verify the owner exists)
+      await fetchMyShop(firebaseUid);
+    } catch (e) {
+      debugPrint('Error registering owner: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchMyShop(dynamic firebaseUid) async {
     if (_isLoading) return; // Prevent concurrent fetches
     _isLoading = true;
@@ -47,6 +81,7 @@ class ShopProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error fetching shop: $e');
       _shop = null;
+      // We swallow the error here so the UI can show the "Create Shop" state
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -133,26 +168,44 @@ class ShopProvider with ChangeNotifier {
     notifyListeners();
     try {
       // 1. Register Owner
-      final ownerData = {
-        'firebase_uid': data['owner_id'],
-        'email': data['email'],
-        'first_name': data['first_name'],
-        'last_name': data['last_name'],
-        'cnic': data['cnic'],
-        'phone': data['personal_phone'],
-        'permanent_address': data['permanent_address'],
-        'username':
-            data['email'].split('@')[0] +
-            '${DateTime.now().millisecondsSinceEpoch}',
-      };
+      int postgresOwnerId;
+      try {
+        final ownerData = {
+          'firebase_uid': data['owner_id'],
+          'email': data['email'],
+          'first_name': data['first_name'],
+          'last_name': data['last_name'],
+          'cnic': data['cnic'],
+          'phone': data['personal_phone'],
+          'permanent_address': data['permanent_address'],
+          'username':
+              data['email'].split('@')[0] +
+              '${DateTime.now().millisecondsSinceEpoch}',
+        };
 
-      final ownerResponse = await _apiClient.post('/users/owner', ownerData);
+        final ownerResponse = await _apiClient.post('/users/owner', ownerData);
 
-      if (ownerResponse == null || ownerResponse['owner_id'] == null) {
-        throw Exception('Failed to register owner');
+        if (ownerResponse == null || ownerResponse['owner_id'] == null) {
+          throw Exception('Failed to register owner');
+        }
+        postgresOwnerId = ownerResponse['owner_id'];
+      } catch (e) {
+        // Handle "User already exists" (409)
+        if (e.toString().contains('409') ||
+            e.toString().contains('already exists')) {
+          debugPrint('Owner already exists, fetching existing ID...');
+          final existingOwner = await _apiClient.get(
+            '/users/owner/firebase/${data['owner_id']}',
+          );
+          if (existingOwner != null && existingOwner['owner_id'] != null) {
+            postgresOwnerId = existingOwner['owner_id'];
+          } else {
+            rethrow; // Cannot recover if we can't find the existing user
+          }
+        } else {
+          rethrow;
+        }
       }
-
-      final int postgresOwnerId = ownerResponse['owner_id'];
 
       // 2. Create Shop
       final shopDataMap = {
@@ -195,6 +248,19 @@ class ShopProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clear() {
+    _shop = null;
+    _shopStats = {
+      'totalOrders': 0,
+      'revenue': 0.0,
+      'pendingOrders': 0,
+      'activeOrders': 0,
+    };
+    _isLoading = false;
+    _socketService.disconnect();
+    notifyListeners();
   }
 
   void _initSocket() {

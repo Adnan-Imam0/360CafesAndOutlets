@@ -16,10 +16,24 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   Map<String, dynamic>? _customerProfile;
   bool _isLoading = false;
+  bool _onboardingSeen = false;
 
   User? get user => _user;
   Map<String, dynamic>? get customerProfile => _customerProfile;
   bool get isLoading => _isLoading;
+  bool get onboardingSeen => _onboardingSeen;
+
+  void setOnboardingSeen(bool value) {
+    _onboardingSeen = value;
+    // No notifyListeners() here usually, as it's set before app run
+    // But if we want to be safe:
+    // notifyListeners();
+  }
+
+  Future<void> completeOnboarding() async {
+    _onboardingSeen = true;
+    notifyListeners();
+  }
 
   AuthProvider() {
     _auth.authStateChanges().listen((User? user) {
@@ -86,17 +100,12 @@ class AuthProvider with ChangeNotifier {
         _customerProfile = profile;
         _initSocket();
       } catch (e) {
-        // Customer not found, auto-register them using Google data
-        final newCustomer = {
-          'firebase_uid': user.uid,
-          // Use dummy numeric phone because Google doesn't always provide one
-          'phone_number': user.phoneNumber ?? '0${user.uid.substring(0, 10)}',
-          'display_name': user.displayName ?? 'Google User',
-          'email': user.email,
-        };
-        final profile = await _apiClient.post('/users/customer', newCustomer);
-        _customerProfile = profile;
-        _initSocket();
+        // Customer not found in Postgres.
+        // We do NOT auto-register here anymore.
+        // This will leave _customerProfile as null.
+        // Router will redirect to CompleteProfileScreen.
+        print('Customer not found in DB: $e');
+        _customerProfile = null;
       }
     } catch (e) {
       print('Error syncing customer profile: $e');
@@ -158,10 +167,8 @@ class AuthProvider with ChangeNotifier {
     final phone = _customerProfile!['phone_number'] as String?;
     if (phone == null) return false;
 
-    // Heuristic: If it contains letters (from UID substring?) -> UID is usually alphanumeric.
-    final hasLetters = phone.contains(RegExp(r'[a-zA-Z]'));
-    if (hasLetters) return false;
-
+    // Simplified: If profile exists, it's considered complete enough to enter Home.
+    // User requested to skip the mandatory "Enter Number" step.
     return true;
   }
 

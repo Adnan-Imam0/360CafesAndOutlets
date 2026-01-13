@@ -1,0 +1,62 @@
+[
+  {
+    "shop_id": 1,
+    "owner_id": 1,
+    "shop_name": "shai cafe",
+    "shop_type": "Cafe",
+    "address": "shahi cafe turbat",
+    "phone_number": "03243508855",
+    "profile_picture_url": "https://res.cloudinary.com/deacv1cbd/image/upload/v1767881990/cafe360/products/chkbthkj0zytdvsprsbb.jpg",
+    "status": "pending",
+    "is_accepting_orders": true,
+    "created_at": "2026-01-06T15:08:54.515Z",
+    "is_open": true,
+    "average_rating": "3.8000000000000000",
+    "review_count": "10"
+  },
+  {
+    "shop_id": 2,
+    "owner_id": 2,
+    "shop_name": "kech outlet",
+    "shop_type": "Outlet",
+    "address": "kech outlet main chowk",
+    "phone_number": "03203459977",
+    "profile_picture_url": "https://res.cloudinary.com/deacv1cbd/image/upload/v1767960178/cafe360/products/vc10fusj8ucz36v19jop.png",
+    "status": "pending",
+    "is_accepting_orders": true,
+    "created_at": "2026-01-09T12:02:58.855Z",
+    "is_open": true,
+    "average_rating": "0",
+    "review_count": "0"
+  },
+  {
+    "shop_id": 4,
+    "owner_id": 3,
+    "shop_name": "Fahad Cafe",
+    "shop_type": "Cafe",
+    "address": "Test Address",
+    "phone_number": "03001234567",
+    "profile_picture_url": null,
+    "status": "pending",
+    "is_accepting_orders": true,
+    "created_at": "2026-01-12T17:23:44.352Z",
+    "is_open": true,
+    "average_rating": "0",
+    "review_count": "0"
+  },
+  {
+    "shop_id": 5,
+    "owner_id": 6,
+    "shop_name": "karwan",
+    "shop_type": "Outlet",
+    "address": "uni of turbat",
+    "phone_number": "03212348877",
+    "profile_picture_url": "https://res.cloudinary.com/deacv1cbd/image/upload/v1768239527/cafe360/products/t0uybpfwm30xhy29prv5.jpg",
+    "status": "pending",
+    "is_accepting_orders": true,
+    "created_at": "2026-01-12T17:38:55.090Z",
+    "is_open": true,
+    "average_rating": "0",
+    "review_count": "0"
+  }
+]

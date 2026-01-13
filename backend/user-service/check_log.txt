@@ -1,0 +1,3 @@
+Checking for user with email: fahadrahimnigwari@gmail.com
+User NOT found in shop_owners table.
+customers table does not appear to have an email column.

@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-// const admin = require('../config/firebase');
+
 require('dotenv').config();
 
 const pool = new Pool({
@@ -11,13 +11,12 @@ const pool = new Pool({
 });
 
 const verifyToken = async (idToken) => {
-    // In real app: return await admin.auth().verifyIdToken(idToken);
-    // Mock for development:
+    
     return { uid: 'mock_firebase_uid_' + Date.now(), email: 'mock@example.com', phone_number: '+1234567890' };
 };
 
 const loginOrRegister = async (req, res) => {
-    const { idToken, role } = req.body; // role: 'customer' or 'owner'
+    const { idToken, role } = req.body; 
 
     try {
         const decodedToken = await verifyToken(idToken);
@@ -28,7 +27,7 @@ const loginOrRegister = async (req, res) => {
         let table = role === 'owner' ? 'shop_owners' : 'customers';
         let idField = role === 'owner' ? 'owner_id' : 'customer_id';
 
-        // Check if user exists
+        
         const checkQuery = `SELECT * FROM ${table} WHERE firebase_uid = $1`;
         const checkResult = await pool.query(checkQuery, [firebase_uid]);
 
@@ -36,9 +35,7 @@ const loginOrRegister = async (req, res) => {
             user = checkResult.rows[0];
             return res.json({ message: 'Login successful', user });
         } else {
-            // User needs to register (create profile)
-            // Ideally we return a strict response saying "User not found, please register"
-            // But if we want auto-register (barebones):
+           
             return res.status(404).json({ message: 'User not found, please complete registration', firebase_uid, email, phone_number });
         }
 

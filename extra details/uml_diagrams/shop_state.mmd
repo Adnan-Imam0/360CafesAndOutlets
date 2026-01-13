@@ -1,0 +1,30 @@
+stateDiagram
+    [*] --> Pending
+    Pending --> Accepted
+    Pending --> Rejected
+    Accepted --> Preparing
+    Preparing --> Ready
+    Ready --> Completed
+    
+    Completed --> [*]
+    Rejected --> [*]
+
+    note right of Pending
+        Customer places order.
+        Waiting for Shop Owner.
+    end note
+
+    note left of Rejected
+        Owner declines order.
+        (e.g. Out of stock)
+    end note
+
+    note right of Accepted
+        Owner accepts order.
+        Kitchen starts prep.
+    end note
+
+    note right of Ready
+        Food is packed.
+        Waiting for pickup.
+    end note

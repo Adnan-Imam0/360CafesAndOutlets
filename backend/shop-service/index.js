@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3003;
+const PORT = 3007; // Forced for debugging
 
 app.use(cors());
 app.use(express.json());
@@ -27,7 +27,7 @@ const pool = new Pool({
 app.get('/health', async (req, res) => {
     try {
         await pool.query('SELECT 1');
-        res.json({ status: 'Shop Service Running', db: 'Connected' });
+        res.json({ status: 'Shop Service Running MODIFIED', db: 'Connected' });
     } catch (err) {
         res.status(500).json({ status: 'Shop Service Error', db: err.message });
     }
@@ -39,7 +39,6 @@ const productRoutes = require('./routes/productRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 
 // Mount routes on both /api/ and root paths to handle Gateway rewrite issues
-// Mount routes
 app.use('/api/reviews', reviewRoutes);
 app.use('/reviews', reviewRoutes);
 
@@ -56,10 +55,42 @@ app.use('/categories', categoryRoutes);
 
 app.use(express.static('uploads'));
 
+app.get('/debug-routes', (req, res) => {
+    const routes = [];
+    app._router.stack.forEach((middleware) => {
+        if (middleware.route) { // routes registered directly on the app
+            routes.push(middleware.route.path);
+        } else if (middleware.name === 'router') { // router middleware 
+            middleware.handle.stack.forEach((handler) => {
+                if (handler.route) {
+                    routes.push(handler.route.path);
+                }
+            });
+        }
+    });
+    res.json(routes);
+});
+
 // Catch-all 404
 app.use((req, res) => {
     console.error(`[ShopService] 404 Not Found: ${req.method} ${req.url}`);
     res.status(404).send(`ShopService: Cannot ${req.method} ${req.url}`);
+});
+
+app.get('/debug-routes', (req, res) => {
+    const routes = [];
+    app._router.stack.forEach((middleware) => {
+        if (middleware.route) { // routes registered directly on the app
+            routes.push(middleware.route.path);
+        } else if (middleware.name === 'router') { // router middleware 
+            middleware.handle.stack.forEach((handler) => {
+                if (handler.route) {
+                    routes.push(handler.route.path);
+                }
+            });
+        }
+    });
+    res.json(routes);
 });
 
 app.listen(PORT, () => {

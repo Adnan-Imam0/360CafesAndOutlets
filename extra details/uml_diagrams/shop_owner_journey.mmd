@@ -1,0 +1,47 @@
+stateDiagram
+    [*] --> Splash
+    Splash --> LoginScreen: Not Logged In
+    Splash --> Dashboard: Logged In
+
+    state LoginScreen {
+        [*] --> InputCredentials
+        InputCredentials --> Dashboard: Valid Credentials
+        InputCredentials --> InputCredentials: Invalid Error
+    }
+
+    state Dashboard {
+        [*] --> IncomingTab
+        
+        state IncomingTab {
+            [*] --> Idle
+            Idle --> NewOrderReceived: Socket Event
+            NewOrderReceived --> OrderDetails: Tap Order
+            OrderDetails --> ActiveTab: Accept
+            OrderDetails --> HistoryTab: Reject
+        }
+
+        state ActiveTab {
+            [*] --> PreparingList
+            PreparingList --> ReadyList: Mark "Ready"
+            ReadyList --> HistoryTab: Mark "Completed" (Handover)
+        }
+
+        state HistoryTab {
+            [*] --> OrderArchive
+        }
+    }
+
+    Dashboard --> MenuManager: Tap "Menu"
+    state MenuManager {
+        [*] --> ProductList
+        ProductList --> EditForm: Tap Product
+        ProductList --> AddForm: Tap "Add New"
+        EditForm --> ProductList: Save
+        AddForm --> ProductList: Create
+        ProductList --> ProductList: Toggle Availability
+    }
+
+    Dashboard --> ShopStatus: Toggle Switch
+    ShopStatus --> Dashboard: Update Status (Open/Closed)
+
+    Dashboard --> LoginScreen: Logout

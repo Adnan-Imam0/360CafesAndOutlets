@@ -1,0 +1,54 @@
+graph TD
+    %% Styling
+    classDef client fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef gateway fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef service fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef db fill:#bfb,stroke:#333,stroke-width:2px;
+    classDef ext fill:#ddd,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5;
+
+    subgraph Clients ["Client Layer"]
+        CA[Customer App<br/>(Flutter)]:::client
+        SOA[Shop Owner App<br/>(Flutter)]:::client
+    end
+
+    subgraph API ["API Gateway Layer"]
+        GW[API Gateway<br/>Port: 3000]:::gateway
+    end
+
+    subgraph Backbone ["Microservices Layer"]
+        AS[Auth Service<br/>Port: 3001]:::service
+        US[User Service<br/>Port: 3002]:::service
+        SS[Shop Service<br/>Port: 3003]:::service
+        OS[Order Service<br/>Port: 3004]:::service
+    end
+
+    subgraph Data ["Persistence Layer"]
+        PG[(PostgreSQL DB)]:::db
+    end
+
+    subgraph External ["External Services"]
+        FB{Firebase Auth}:::ext
+    end
+
+    %% Client Interactions
+    CA -- "HTTP/REST & Socket.io" --> GW
+    SOA -- "HTTP/REST & Socket.io" --> GW
+
+    %% Gateway Routing
+    GW -- "/auth" --> AS
+    GW -- "/users" --> US
+    GW -- "/shops, /products" --> SS
+    GW -- "/orders" --> OS
+
+    %% Internal Service Logic
+    AS -- "Verify Token" --> FB
+    OS -- "Socket Events" -.-> GW
+
+    %% Database Connections
+    AS -- "Read/Write Users" --> PG
+    US -- "Read/Write Profiles" --> PG
+    SS -- "Read/Write Menus" --> PG
+    OS -- "Transact Orders" --> PG
+
+    %% Cross-Service dependencies (conceptual)
+    OS -.-> US

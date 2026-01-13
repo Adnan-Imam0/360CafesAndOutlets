@@ -179,23 +179,56 @@ class _MyShopScreenState extends State<MyShopScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Status Badge
+                  // Status Toggle
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50,
+                      color: (shop['is_open'] == true)
+                          ? Colors.green.shade50
+                          : Colors.red.shade50,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Text(
-                      '● Active', // Mock status
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.bold,
+                      border: Border.all(
+                        color: (shop['is_open'] == true)
+                            ? Colors.green.shade200
+                            : Colors.red.shade200,
                       ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          (shop['is_open'] == true) ? '● Open' : '● Closed',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: (shop['is_open'] == true)
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 24,
+                          width: 40,
+                          child: Switch(
+                            value: shop['is_open'] == true,
+                            onChanged: (value) {
+                              context.read<ShopProvider>().toggleShopStatus(
+                                value,
+                              );
+                            },
+                            activeColor: Colors.green,
+                            activeTrackColor: Colors.green.shade200,
+                            inactiveThumbColor: Colors.red,
+                            inactiveTrackColor: Colors.red.shade200,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -278,6 +311,13 @@ class _MyShopScreenState extends State<MyShopScreen> {
                   'Settings',
                   'Shop preferences',
                   Icons.settings_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildActionTile(
+                  context,
+                  'Customer Reviews',
+                  'See what people are saying',
+                  Icons.star_outline,
                 ),
               ],
             ),
@@ -368,6 +408,8 @@ class _MyShopScreenState extends State<MyShopScreen> {
             // but if we are on dashboard tab, we might need to switch tabs via state.
             // For now let's just push /orders if mapped)
             context.go('/orders');
+          } else if (title == 'Customer Reviews') {
+            context.push('/reviews');
           }
         },
       ),
